@@ -1,8 +1,11 @@
 <template>
-  <div>
-    <input type="text" v-model="todoItem" title="Todo" placeholder="Input Todo" @keyup.enter="passItem" />
-    <button type="button" @click="passItem">Submit</button>
-  </div>
+  <form @submit.prevent="passItem">
+    <fieldset>
+      <legend>TODO INPUT</legend>
+      <input type="text" v-model="todoItem" title="Todo" placeholder="Input Todo"  /> <!--@keyup.enter="passItem"-->
+      <button type="button" @click="passItem">Submit</button>
+    </fieldset>
+  </form>
 </template>
 
 <script>
@@ -22,6 +25,12 @@ export default {
 </script>
 
 <style scoped>
+  fieldset {
+      border: none;
+  }
+  legend {
+      display: none;
+  }
   input[type='text'] {
     width: calc(100% - 100px);
     padding: 10px 15px;

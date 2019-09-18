@@ -1,34 +1,52 @@
 <template>
   <div id="app">
-    <THeader></THeader>
-    <TInput v-on:passItem="addItem"></TInput>
-    <ul class="list_area">
-      <li v-for="(list, index) in todoLists" :key="list.key" :class="list.complete ? 'done' : ''">
-        <em @click="toggleStatus(index, 'complete')"><i class="fa fa-check"></i></em> 
-        <span class="title" @click="toggleStatus(index, 'complete')">{{list.title}}</span>
-        <span class="btn_imp" :class="list.important ? 'on' : ''" @click="toggleStatus(index, 'important')"><i class="fa fa-star"></i></span>
-        <span class="btn_remove" @click="removeItem(index)"><i class="fa fa-times"></i></span>
-      </li>
-    </ul>
+    <t-header></t-header>
+    <t-input v-on:passItem="addItem"></t-input>
+    <t-list v-bind:props="todoLists" v-on:passRemove="removeItem" v-on:passStatus="toggleStatus"></t-list>
   </div>
 </template>
 <script>
 import THeader from './comp/THeader.vue';
 import TInput from './comp/TInput.vue';
+import TList from './comp/TList.vue';
+
 export default {
   name: 'app',
   components: {
     THeader,
-    TInput
+    TInput,
+    TList
   },
   data() {
     return {
-      todoLists: []
+      todoLists: [],
+      listIndex: 0
     }
   },
+  created() {
+    let imp_list = [];
+    let normal_list = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.getItem(localStorage.key(i)) !== 'SILENT') {
+        const tmp = JSON.parse(localStorage.getItem(localStorage.key(i)));
+        tmp.important ? imp_list.push(tmp) : normal_list.push(tmp);
+      }      
+    }
+    this.todoLists = imp_list.sort(this.sortLists).concat(normal_list.sort(this.sortLists));
+    this.listIndex = this.todoLists.length;
+  },
   methods: {
+    sortLists(a, b) {
+      if ( a.idx < b.idx ){
+        return -1;
+      }
+      if ( a.idx > b.idx ){
+        return 1;
+      }
+      return false;
+    },
     addItem(item) {
-      let tmp = {title: item, complete: false, important: false}
+      let tmp = {title: item, complete: false, important: false, idx: this.listIndex}
       this.todoLists.forEach(comp => {
         if (comp.title === item) {
           tmp = false;
@@ -37,15 +55,18 @@ export default {
       if (tmp) {
         this.todoLists.push(tmp);
         localStorage.setItem(tmp.title, JSON.stringify(tmp));
+        this.listIndex += 1;
       } else {
         alert('이미 등록되어있는 투두입니다.');
       }
     },
     removeItem(idx) {
+      localStorage.removeItem(this.todoLists[idx].title);
       this.todoLists.splice(idx, 1);
     },
     toggleStatus(idx, action) {
-      this.todoLists[idx][action] = !this.todoLists[idx][action];
+      const tmp = this.todoLists[idx];
+      tmp[action] = !tmp[action];
       if (action === 'important') {
         this.setSortList(idx);
       }
@@ -81,74 +102,5 @@ export default {
     background: rgba(255, 255, 255, .93);
     border-radius: 3px;
     box-sizing: border-box;
-  }
-  .list_area {
-    min-height: 300px;
-    margin-top: 20px;
-  }
-  .list_area li {
-    position: relative;
-    padding: 10px 40px 15px;
-    margin-bottom: 15px;
-    list-style: none;
-    border: 1px solid #e9e9e9;
-    border-left: 1px solid #a6d7de;
-    box-sizing: border-box;
-    word-break: break-all;
-  }
-  .list_area li:hover {
-    background: rgba(167,215,222,.07);
-    border-left: 2px solid #a6d7de;
-  }
-  .list_area li span {
-    cursor: pointer;
-  }
-  .list_area li .title {
-    display: inline-block;
-    padding-right: 10px;
-  }
-  .list_area li em {
-    position: absolute;
-    left: 5px; top: 0;
-    width: 30px;
-    height: 100%;
-    text-align: center;
-    cursor: pointer;
-  }
-  .list_area li em i {
-    position: absolute;
-    top: calc(50% - 10.5px); left: 4px;
-    width: 13px; height: 13px;
-    padding: 2px;
-    line-height: 13px;
-    background: #fff;
-    color: #ddd;
-    border: 2px solid #ddd;
-    border-radius: 50px;
-  }
-  .list_area li.done em i {
-    color: #a6d7de;
-    border:2px solid #a6d7de;
-  }
-  .list_area li.done .title {
-    text-decoration: line-through; 
-  }
-  .btn_imp {
-    position: absolute;
-    top: calc(43% - 7px); right: 32px;
-    width: 11px; height: 14px;
-    color: rgba(0,0,0,.3);
-  }
-  .btn_imp.on, .btn_imp.on:hover, .btn_imp.on:active {
-    color: #ffc516;
-  }
-  .btn_remove {
-    position: absolute;
-    top: calc(41% - 7px); right: 15px;
-    width: 11px; height: 14px;
-    color: rgba(0,0,0,.3);
-  }
-  .btn_imp:hover, .btn_imp:active, .btn_remove:hover, .list_area li .btn_remove:active {
-    color: rgba(0,0,0,.5);
-  }
+  }  
 </style>
